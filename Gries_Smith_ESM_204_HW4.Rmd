@@ -50,7 +50,7 @@ The federal government uses a variety of measures to estimate the SCC to quantif
 The dataset contains the following:
 
 - Climate change damages measured in USD based on warming increases in Degrees Celsius “high” and “low.” 
-- Two warming scenarios (in Celsisu) based on a "baseline" and "pulse" scenario with higher warming in the "pulse" scenario. 
+- Two warming scenarios (in Celsius) based on a "baseline" and "pulse" scenario with higher warming in the "pulse" scenario. 
 
 
 ### **1. Damage Equation**
@@ -58,13 +58,41 @@ The dataset contains the following:
 This section generates a quadratic damage function relating the dollar value of damages to the change in global mean temperature.
 
 ```{r}
-# Estimate a function with 0 intercept 
+# Estimate a function with 0 intercept, take a look at the data first 
+
+ggplot(data = damages, aes(x = warming, y = damages)) +
+  geom_point()
+
+# This is clearly exponential, create a vector of the warming values squared 
+
+warming_square <- damages$warming^2
+
+# now we regress, force the itnercept to 0
+
+damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages)
+#summary(damage_model)
+# This gives us an R^2 of 99%, we're good 
+
+# summary essentially gives us that damages = 19409275730643(warming_square) -1059530137756(warming)
+# Lets see if this makes sense when predicting 
+
+warming_range <- damages$warming
+damage_predict <- predict(damage_model,list(warming = warming_range, warming2 = warming_range^2))
+
 ```
 
 ####**Figure 1: Damages Resulting from Climate Change**
 
 ```{r}
 # Plot the function along with the underlying data
+
+ggplot(data = damages, aes(x = warming, y = damages)) +
+  geom_point() +
+  geom_smooth(aes(x = warming_range, y = damage_predict)) +
+  labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($)')
+
+#Looks good enough to me, may need to scale the damage values 
+
 ```
 
 ### **2. Damage Calculations**
