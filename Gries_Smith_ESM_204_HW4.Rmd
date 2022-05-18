@@ -1,0 +1,135 @@
+---
+title: "ESM 204 - Assignment 4"
+author: "Conner Smith and Taylor Gries"
+date: "5/18/2022"
+output:
+  html_document:
+   theme:
+     bg: "#002B36"
+     fg: "#EEE8D5"
+     primary: "#2AA198"
+   code_folding: hide
+   
+---
+
+```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, options(scipen = 999))
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(thematic)
+library(scales)
+library(equatiomatic)
+
+thematic::thematic_rmd()
+thematic::thematic_on()
+
+```
+
+
+## Overview
+
+```{r}
+# Read in the main data sets
+
+damages <- read_csv(here("data", "damages.csv")) %>% 
+  clean_names() 
+
+warming <- read_csv(here("data", "warming.csv")) %>% 
+  clean_names() %>% 
+  select(-x1)
+
+```
+
+
+The federal government uses a variety of measures to estimate the SCC to quantify the costs associated with climate change. This analysis considers several discount rate calculation methods and reports differences in damages based on different warming and policy scenarios. 
+
+## **Analysis** {.tabset}
+
+The dataset contains the following:
+
+- Climate change damages measured in USD based on warming increases in Degrees Celsius “high” and “low.” 
+- Two warming scenarios (in Celsisu) based on a "baseline" and "pulse" scenario with higher warming in the "pulse" scenario. 
+
+
+### **1. Damage Equation**
+
+This section generates a quadratic damage function relating the dollar value of damages to the change in global mean temperature.
+
+```{r}
+# Estimate a function with 0 intercept 
+```
+
+####**Figure 1: Damages Resulting from Climate Change**
+
+```{r}
+# Plot the function along with the underlying data
+```
+
+### **2. Damage Calculations**
+
+This section uses the function generated from the damages data to predict damages in each year under the baseline climate and the pulse scenario.
+
+####**Figure 2: Damages Over Time With and Without the "Pulse" Scenario**
+
+```{r}
+# Generate the estimates and facet wrap a plot showing the impacts of the two scenarios side by side 
+```
+
+####**Figure 3: Difference in Damages Over Time With and Without the "Pulse" Scenario**
+
+```{r}
+# Generate the differences and facet wrap two plots showing absolute difference between the two scenarios and the difference per ton of CO2 
+```
+
+### **3. SCC Analysis**
+
+This section uses different discount rates to estimate a range of potential SCC values.
+
+####**Figure 4: Discount Rate Impacts on SCC**
+
+```{r}
+# Plot a range of discount rates (likely 2-10 percent) to estimate SCC values 
+```
+
+How does the discount rate affect the SCC? *(Hint, lower discount, higher SCC)*
+
+### **4. Ramsey Rule**
+
+This section uses the following function to estimate the SCC:
+
+\begin{equation}
+r=p+ng
+\end{equation}
+
+```{r}
+# Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC, find it on the graph above 
+
+```
+
+### **5. Policy Considerations**
+
+This section will consider business as usual (Policy A) against strong action against climate change (Policy B). Conditions are as follows: 
+
+- **Policy A:** Warming will occur as in the “baseline” (i.e. “no-pulse”) dataset above (this happens with probability 0.5) or warming each year will be 1.5 times that in the “baseline” dataset (with probability 0.5). 
+
+- **Policy B:** Warming will continue until 2050 as in the “baseline” dataset, and then will stabilize at 1.29 degrees and stay that way forever. 
+
+*Assume: Society is risk neutral and the discount rate is 2%. Policy A costs $0 and Policy B costs $X to implement. Total cost is implementation cost + damages.*
+
+####**Figure 5: Total Cost by Policy Pathway**
+
+```{r}
+# Plot the total cost of the two policies
+```
+
+- **A: Present Value of Damages under Policy A=**
+
+- **B: Present Value of Damages under Policy B=**
+
+*Based on total cost, Congress should implement Policy ?*
+
+### **6. Risk Averse**
+
+Now suppose that society is risk averse. How do you think this would change your advice to Congress?
