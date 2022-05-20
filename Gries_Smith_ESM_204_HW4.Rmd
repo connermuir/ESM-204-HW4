@@ -60,17 +60,22 @@ This section generates a quadratic damage function relating the dollar value of 
 ```{r}
 # Estimate a function with 0 intercept, take a look at the data first 
 
-ggplot(data = damages, aes(x = warming, y = damages)) +
-  geom_point()
+#ggplot(data = damages, aes(x = warming, y = damages)) +
+  #geom_point()
 
 # This is clearly exponential, create a vector of the warming values squared 
 
-warming_square <- damages$warming^2
+#Creating a scaled dataset
+
+damages_scale <- damages %>% 
+  mutate(damages = damages/1000000000)
+
+warming_square <- damages_scale$warming^2
 
 # now we regress, force the itnercept to 0
 
-damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages)
-#summary(damage_model)
+damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages_scale)
+summary(damage_model)
 # This gives us an R^2 of 99%, we're good 
 
 # summary essentially gives us that damages = 19409275730643(warming_square) -1059530137756(warming)
@@ -79,6 +84,11 @@ damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages)
 warming_range <- damages$warming
 damage_predict <- predict(damage_model,list(warming = warming_range, warming2 = warming_range^2))
 
+# Create a function of the equation 
+
+damage_function <- function(x){
+  damage_model$coefficients[1]*x+damage_model$coefficients[2]*x^2
+}
 ```
 
 ####**Figure 1: Damages Resulting from Climate Change**
@@ -86,12 +96,13 @@ damage_predict <- predict(damage_model,list(warming = warming_range, warming2 = 
 ```{r}
 # Plot the function along with the underlying data
 
-ggplot(data = damages, aes(x = warming, y = damages)) +
+  
+ggplot(data = damages_scale, aes(x = warming, y = damages)) +
   geom_point() +
   geom_smooth(aes(x = warming_range, y = damage_predict)) +
-  labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($)')
+  labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($ billions)')
 
-#Looks good enough to me, may need to scale the damage values 
+#Looks good enough to me, note the Y axis now shows damages in billions of dollars
 
 ```
 
