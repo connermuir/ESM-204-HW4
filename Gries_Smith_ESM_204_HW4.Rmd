@@ -246,10 +246,6 @@ This section will consider business as usual (Policy A) against strong action ag
 
 - **Policy B:** Warming will continue until 2050 as in the “baseline” dataset, and then will stabilize at 1.29 degrees and stay that way forever. 
 
-*Assume: Society is risk neutral and the discount rate is 2%. Policy A costs $0 and Policy B costs $X to implement. Total cost is implementation cost + damages.*
-
-#### **Figure 6: Total Cost by Policy Pathway**
-
 ```{r}
 # Estimate PV for the Policy A scenario, discount rate is 2%
 discount_policy <- 2
@@ -303,7 +299,47 @@ expected_value_b <- (sum_b * prob_b)
 
 - **B: Present Value of Damages under Policy B =** $`r round(expected_value_b, 0)` billion
 
-*Based on total cost, Congress should implement Policy ?*
+*Assume: Society is risk neutral and the discount rate is 2%. Policy A costs $0 and Policy B costs $X to implement. Total cost is implementation cost + damages.*
+
+#### **Figure 6: Total Cost by Policy Pathway**
+
+```{r}
+# Now we need the total cost 
+
+# Cost to implement A is just the expected PV of the damages 
+cost_a <- function(x){expected_value_a}
+
+# B adds in the implementation cost (X) 
+cost_b <- function(x){expected_value_b + x}
+
+# For the cost of b to equal the cost of a, implementation cost would have to be $2236574 billion: 
+
+x_equal <- expected_value_a - expected_value_b
+
+
+# Now create a new data frame, including a vector of possible costs (in billions) based on difference calcualted above 
+cost <- c(0,3e5,6e5,9e5,12e5,15e5,18e5,21e5,24e5,27e5,30e5)
+
+cost_df <- data.frame(cost) %>% 
+  mutate(cost_a = cost_a(cost)) %>% 
+  mutate(cost_b = cost_b(cost)) %>% 
+  pivot_longer(cols = c(cost_a, cost_b), 
+               names_to = 'policy', values_to = 'total_cost') %>%
+  mutate(policy = case_when(policy == "cost_a" ~ "Policy A",
+                            policy == "cost_b" ~ "Policy B"))
+
+ggplot(data = cost_df, aes(x = cost, y = total_cost)) +
+  geom_line(aes(color = policy)) +
+  geom_vline(xintercept = x_equal, color = 'darkseagreen', linetype = "dashed") +
+  geom_label(aes(x = 2000000, 
+                 label = "Implementation Cost Intercept = $2,235,574 billion",
+                 y = 1500000), color = "darkseagreen", angle = 90) +
+  labs(x = "Implementation Cost ($ billions)", y = "Total Cost ($ billions)")
+  
+
+```
+
+**Takeaway:** Congress should adopt **Policy B** unless implementation costs are greater than $`r round(x_equal, 0)` billion. Otherwise, they should adopt Policy A *assuming decisions are made to minimize cost and that total cost of Policy A is the present value of damages through 2100 and total cost of Policy B is the sum of the implementation cost and the present value of those damages through 2100.*
 
 ### **6. Risk Averse**
 
