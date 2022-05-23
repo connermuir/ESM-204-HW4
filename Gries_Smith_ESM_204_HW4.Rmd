@@ -66,7 +66,7 @@ This section generates a quadratic damage function relating the dollar value of 
 
 # This is clearly exponential, create a vector of the warming values squared 
 
-#Creating a scaled dataset
+#Creating a scaled dataset scaled to billions 
 
 damages_scale <- damages %>% 
   mutate(damages = damages/1000000000)
@@ -116,9 +116,9 @@ This section uses the function generated from the damages data to predict damage
 ```{r}
 # Generate the estimates and facet wrap a plot showing the impacts of the two scenarios side by side 
 
-#divide difference by 35 billion to get the effect per ton
+#divide difference by 35 billion to get the effect per ton, note we already scaled to billions
 
-pulse_ton <- 35000000000
+pulse_ton <- 35
 
 damages_predict <- warming %>%
   mutate(damages_baseline = damage_function(warming_baseline)) %>%
@@ -135,7 +135,7 @@ ggplot(data = damages_predict, aes(x = year)) +
 
 ```
 
-*Note: the difference in damages between the two scenarios is relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
+*Note: the difference in damages between the two scenarios appear relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
 
 #### **Figure 3: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
 
@@ -181,7 +181,7 @@ discount_damages <- function(rate, damage, time, present_time){
 
 # Create data frame for discounting
 
-discount <- data_frame(rates = seq(0,10, 0.1), SCC = seq(0,10, 0.1))
+discount <- data_frame(rates = seq(0,10, 0.5), SCC = seq(0,10, 0.5))
 
 # Use for loop to calculate the discounted damages up to 2100 for discount rates from 0 to 10 and apply function to sum all elements in column to find the net discounted cost
 
@@ -192,12 +192,12 @@ for(x in 1:length(discount$rates)){
 # Plot discount
 
 ggplot(data = discount) +
-  geom_point(aes(x = rates, y = SCC)) + 
-  labs (x = "Discount Rates (%)", y = "Social Cost of Carbon ($/")
+  geom_point(aes(x = rates, y = SCC), color = "darkseagreen") + 
+  labs (x = "Discount Rates (%)", y = "Social Cost of Carbon ($/ton)")
 
 ```
 
-How does the discount rate affect the SCC? *(Hint, lower discount, higher SCC)*
+*Figure 4 shows that increasing the discount rate lowers the SCC*
 
 ### **4. Ramsey Rule**
 
@@ -226,9 +226,15 @@ ramsey <- (p+n*g)*100
 
 discount_ramsey <- sum(discount_damages(ramsey,damages_predict$damages_difference_ton, damages_predict$year, 2022))
 
+# SCC is $71.35 using the Ramsey Rule 
+
 ggplot(data = discount)+
-  geom_point(aes(x = rates, y = SCC))+
-  geom_point(x = ramsey, y = discount_ramsey, color = "coral", size = 4)
+  geom_point(aes(x = rates, y = SCC), color = "darkseagreen")+
+  geom_point(x = ramsey, y = discount_ramsey, color = "coral", size = 4) +
+  geom_vline(xintercept = 2.1, color = 'darkseagreen', linetype = "dashed") +
+  geom_label(aes(x = 4, label = "Ramsey Rule: SCC = $71.35",
+                 y = 71), color = "darkseagreen", angle = 90) +
+  labs(x = "Discount Rates (%)", y = "Social Cost of Carbon ($/ton)")
 
 ```
 
@@ -242,7 +248,7 @@ This section will consider business as usual (Policy A) against strong action ag
 
 *Assume: Society is risk neutral and the discount rate is 2%. Policy A costs $0 and Policy B costs $X to implement. Total cost is implementation cost + damages.*
 
-#### **Figure 5: Total Cost by Policy Pathway**
+#### **Figure 6: Total Cost by Policy Pathway**
 
 ```{r}
 # Plot the total cost of the two policies
