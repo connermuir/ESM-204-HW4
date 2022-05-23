@@ -135,7 +135,7 @@ ggplot(data = damages_predict, aes(x = year)) +
 
 ```
 
-*Note: the difference in damages between the two scenarios appear relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
+*Note: the difference in damages between the two scenarios appear relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line) which is barely visible given the scale of this graph.*
 
 #### **Figure 3: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
 
@@ -158,6 +158,7 @@ ton_plot
 # may need to double check units/conversion here but the graphs look okay 
 
 ```
+The *difference in damages* between the two scenarios, both in absolute and unit-based terms, decrease over time even while the damages overall (for both scenarios) increase exponentially over time. 
 
 ### **3. SCC Analysis**
 
@@ -197,7 +198,9 @@ ggplot(data = discount) +
 
 ```
 
-*Figure 4 shows that increasing the discount rate lowers the SCC*
+*Figure 4 shows that increasing the discount rate lowers the SCC.*
+
+Discount rates proposed by the Obama administration and New York State (in the 2-3% range) lead to SCC values between $100-50.  
 
 ### **4. Ramsey Rule**
 
@@ -207,8 +210,8 @@ This section uses the following function to estimate the SCC:
 r=p+ng
 \end{equation}
 
-#### **Figure 5: The NPV of future damages between 2021 and 2100 at year 2021 discounted with respect to various discount rates. The coral point shows the discount rate and SCC associated with recommendations made by The National Academies of Sciences, Engineering, and Medicine**
 
+#### **Figure 5: SCC in Relation to Ramsey Rule**
 
 ```{r}
 # Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC, find it on the graph above 
@@ -237,6 +240,10 @@ ggplot(data = discount)+
   labs(x = "Discount Rates (%)", y = "Social Cost of Carbon ($/ton)")
 
 ```
+
+The NPV of future damages between 2021 and 2100 at year 2021 discounted with respect to various discount rates. The coral point shows the discount rate and SCC associated with recommendations made by The National Academies of Sciences, Engineering, and Medicine, also known as the Ramsey Rule defined in the equation above. 
+
+The parameters used in this calculation were ρ = 0.001, η = 2, and g = 0.01. This gives an SCC value of $`r round(discount_ramsey, 2)`/ton. This SCC level is consistent with the discount rates proposed by the Obama administration and New York State. 
 
 ### **5. Policy Considerations**
 
@@ -343,4 +350,6 @@ ggplot(data = cost_df, aes(x = cost, y = total_cost)) +
 
 ### **6. Risk Averse**
 
-Now suppose that society is risk averse. How do you think this would change your advice to Congress?
+The more risk averse society is, the more attractive Policy B becomes. The point where Policy B and Policy A have the same total cost (in other words, the level of implementation cost that creates this scenario) would increase. This is because the costs and risks of Policy B are known, the probability of achieving these costs is 1. On the other hand, the costs of Policy A are unknown. There is a 50% chance warming will follow the baseline and deliver lower costs. But there is also the risk (50% chance) that warming will be 1.5 times higher and drive the cost of damage up.
+
+**To avoid the risk of falling into this higher damage scenario, Congress should prioritize Policy B if we are assuming risk aversion is leading the decision-making process.**
