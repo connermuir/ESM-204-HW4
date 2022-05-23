@@ -191,8 +191,9 @@ for(x in 1:length(discount$rates)){
 
 # Plot discount
 
-ggplot(data = discount)+
-  geom_point(aes(x = rates, y = SCC))
+ggplot(data = discount) +
+  geom_point(aes(x = rates, y = SCC)) + 
+  labs (x = "Discount Rates (%)", y = "Social Cost of Carbon ($/")
 
 ```
 
