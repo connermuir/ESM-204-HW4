@@ -99,8 +99,8 @@ damage_function <- function(x){
 
   
 ggplot(data = damages_scale, aes(x = warming, y = damages)) +
-  geom_point() +
-  geom_smooth(aes(x = warming_range, y = damage_predict)) +
+  geom_point(color = 'darkseagreen') +
+  geom_smooth(aes(x = warming_range, y = damage_predict), color = 'sienna') +
   labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($ billions)')
 
 #Looks good enough to me, note the Y axis now shows damages in billions of dollars
@@ -251,12 +251,57 @@ This section will consider business as usual (Policy A) against strong action ag
 #### **Figure 6: Total Cost by Policy Pathway**
 
 ```{r}
-# Plot the total cost of the two policies
+# Estimate PV for the Policy A scenario, discount rate is 2%
+discount_policy <- 2
+
+# Need to create a new dataset with the damages and PV for both baseline and 1.5X warming 
+
+damages_policy_a <- damages_predict %>% 
+  select(year, warming_baseline, damages_baseline) %>%
+  mutate(damages_1.5 = damage_function(1.5*warming_baseline)) %>%
+  mutate(pv_baseline =
+           discount_damages(discount_policy, damages_baseline,
+                            damages_predict$year, 2022)) %>%
+  mutate(pv_1.5 = discount_damages(discount_policy, damages_1.5,
+                            damages_predict$year, 2022))
+
+# Now we need to calculate the probabilities. 
+
+prob_base <- 0.5
+prob_1.5 <- 0.5
+
+# Sum the pv for each 
+sum_base <- sum(damages_policy_a$pv_baseline)
+sum_1.5 <- sum(damages_policy_a$pv_1.5)
+
+# Scale these by probability
+expected_value_a <- (sum_base * prob_base) + (sum_1.5 * prob_1.5)
+#3023245 billion dollars (I think) CHECK THIS NUMBER 
+
+# Now do this for policy B
+damages_policy_b <- damages_predict %>% 
+  select(year, warming_baseline) 
+
+for (i in 30:79){
+  damages_policy_b$warming_baseline[i]=1.29
+}
+
+# Warming locked at 1.29 after 2050
+
+damages_policy_b <- damages_policy_b %>% 
+  mutate(damages_b = damage_function(warming_baseline)) %>%
+  mutate(pv_b =
+           discount_damages(discount_policy, damages_b,
+                            damages_predict$year, 2022))
+
+prob_b <- 1
+sum_b <- sum(damages_policy_b$pv_b)  
+expected_value_b <- (sum_b * prob_b)
 ```
 
-- **A: Present Value of Damages under Policy A=**
+- **A: Present Value of Damages under Policy A =** $`r round(expected_value_a, 0)` billion
 
-- **B: Present Value of Damages under Policy B=**
+- **B: Present Value of Damages under Policy B =** $`r round(expected_value_b, 0)` billion
 
 *Based on total cost, Congress should implement Policy ?*
 
