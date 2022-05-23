@@ -14,6 +14,7 @@ output:
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, options(scipen = 999))
+
 library(tidyverse)
 library(here)
 library(janitor)
@@ -21,8 +22,10 @@ library(thematic)
 library(scales)
 library(equatiomatic)
 library
+
 thematic::thematic_rmd()
 thematic::thematic_on()
+
 ```
 
 
@@ -30,11 +33,14 @@ thematic::thematic_on()
 
 ```{r}
 # Read in the main data sets
+
 damages <- read_csv(here("data", "damages.csv")) %>% 
   clean_names() 
+
 warming <- read_csv(here("data", "warming.csv")) %>% 
   clean_names() %>% 
   select(-x1)
+
 ```
 
 
@@ -54,22 +60,33 @@ This section generates a quadratic damage function relating the dollar value of 
 
 ```{r}
 # Estimate a function with 0 intercept, take a look at the data first 
+
 #ggplot(data = damages, aes(x = warming, y = damages)) +
   #geom_point()
+
 # This is clearly exponential, create a vector of the warming values squared 
+
 #Creating a scaled dataset
+
 damages_scale <- damages %>% 
   mutate(damages = damages/1000000000)
+
 warming_square <- damages_scale$warming^2
+
 # now we regress, force the itnercept to 0
+
 damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages_scale)
 #summary(damage_model)
 # This gives us an R^2 of 99%, we're good 
+
 # summary essentially gives us that damages = 19409275730643(warming_square) -1059530137756(warming)
 # Lets see if this makes sense when predicting 
+
 warming_range <- damages$warming
 damage_predict <- predict(damage_model,list(warming = warming_range, warming2 = warming_range^2))
+
 # Create a function of the equation 
+
 damage_function <- function(x){
   damage_model$coefficients[1]*x+damage_model$coefficients[2]*x^2
 }
@@ -79,12 +96,15 @@ damage_function <- function(x){
 
 ```{r}
 # Plot the function along with the underlying data
+
   
 ggplot(data = damages_scale, aes(x = warming, y = damages)) +
   geom_point() +
   geom_smooth(aes(x = warming_range, y = damage_predict)) +
   labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($ billions)')
+
 #Looks good enough to me, note the Y axis now shows damages in billions of dollars
+
 ```
 
 ### **2. Damage Calculations**
@@ -95,44 +115,55 @@ This section uses the function generated from the damages data to predict damage
 
 ```{r}
 # Generate the estimates and facet wrap a plot showing the impacts of the two scenarios side by side 
+
 #divide difference by 35 billion to get the effect per ton
+
 pulse_ton <- 35000000000
+
 damages_predict <- warming %>%
   mutate(damages_baseline = damage_function(warming_baseline)) %>%
   mutate(damages_pulse = damage_function(warming_pulse)) %>%
   mutate(damages_difference = damages_pulse - damages_baseline) %>%
   mutate(damages_difference_ton = damages_difference/pulse_ton)
+
 # Create the first graph showing the lines for both scenarios and total damages 
+
 ggplot(data = damages_predict, aes(x = year)) +
   geom_smooth(aes(y = damages_baseline), color = "goldenrod") +
   geom_smooth(aes(y = damages_pulse), color = "sienna") +
   labs(x = 'Year', y = 'Damages ($ billions)')
+
 ```
 
 *Note: the difference in damages between the two scenarios is relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
 
-#### **Figure 3 and 4: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
+#### **Figure 3: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
 
 ```{r}
 # Generate the differences and facet wrap two plots showing absolute difference between the two scenarios and the difference per ton of CO2 
+
 absolute_plot <- ggplot(data = damages_predict,
                         aes(x = year, y = damages_difference)) +
   geom_smooth(color = "goldenrod") +
   labs(x = 'Year', y = 'Difference in Damages ($ billions)')
 absolute_plot
+
 ton_plot <- ggplot(data = damages_predict,
                         aes(x = year, y = damages_difference_ton)) +
   geom_smooth(color = "sienna") +
   labs(x = 'Year', y = 'Difference in Damages ($ billions per ton)')
 ton_plot
+
+
 # may need to double check units/conversion here but the graphs look okay 
+
 ```
 
 ### **3. SCC Analysis**
 
 This section uses different discount rates to estimate a range of potential SCC values.
 
-#### **Figure 5: Discount Rate Impacts on SCC**
+#### **Figure 4: Discount Rate Impacts on SCC**
 
 ```{r}
 # Plot a range of discount rates (likely 2-10 percent) to estimate SCC values 
@@ -175,7 +206,7 @@ This section uses the following function to estimate the SCC:
 r=p+ng
 \end{equation}
 
-#### **Figure 6: The NPV of future damages between 2021 and 2100 at year 2021 discounted with respect to various discount rates. The coral point shows the discount rate and SCC associated with recommendations made by The National Academies of Sciences, Engineering, and Medicine**
+#### **Figure 5: The NPV of future damages between 2021 and 2100 at year 2021 discounted with respect to various discount rates. The coral point shows the discount rate and SCC associated with recommendations made by The National Academies of Sciences, Engineering, and Medicine**
 
 
 ```{r}
