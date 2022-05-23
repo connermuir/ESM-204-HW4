@@ -12,19 +12,17 @@ output:
    
 ---
 
-```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, options(scipen = 999))
-
 library(tidyverse)
 library(here)
 library(janitor)
 library(thematic)
 library(scales)
 library(equatiomatic)
-
+library
 thematic::thematic_rmd()
 thematic::thematic_on()
-
 ```
 
 
@@ -32,14 +30,11 @@ thematic::thematic_on()
 
 ```{r}
 # Read in the main data sets
-
 damages <- read_csv(here("data", "damages.csv")) %>% 
   clean_names() 
-
 warming <- read_csv(here("data", "warming.csv")) %>% 
   clean_names() %>% 
   select(-x1)
-
 ```
 
 
@@ -59,63 +54,85 @@ This section generates a quadratic damage function relating the dollar value of 
 
 ```{r}
 # Estimate a function with 0 intercept, take a look at the data first 
-
-ggplot(data = damages, aes(x = warming, y = damages)) +
-  geom_point()
-
+#ggplot(data = damages, aes(x = warming, y = damages)) +
+  #geom_point()
 # This is clearly exponential, create a vector of the warming values squared 
-
-warming_square <- damages$warming^2
-
+#Creating a scaled dataset
+damages_scale <- damages %>% 
+  mutate(damages = damages/1000000000)
+warming_square <- damages_scale$warming^2
 # now we regress, force the itnercept to 0
-
-damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages)
+damage_model <- lm(damages ~ 0 + warming + warming_square, data = damages_scale)
 #summary(damage_model)
 # This gives us an R^2 of 99%, we're good 
-
 # summary essentially gives us that damages = 19409275730643(warming_square) -1059530137756(warming)
 # Lets see if this makes sense when predicting 
-
 warming_range <- damages$warming
 damage_predict <- predict(damage_model,list(warming = warming_range, warming2 = warming_range^2))
-
+# Create a function of the equation 
+damage_function <- function(x){
+  damage_model$coefficients[1]*x+damage_model$coefficients[2]*x^2
+}
 ```
 
-####**Figure 1: Damages Resulting from Climate Change**
+#### **Figure 1: Damages Resulting from Climate Change**
 
 ```{r}
 # Plot the function along with the underlying data
-
-ggplot(data = damages, aes(x = warming, y = damages)) +
+  
+ggplot(data = damages_scale, aes(x = warming, y = damages)) +
   geom_point() +
   geom_smooth(aes(x = warming_range, y = damage_predict)) +
-  labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($)')
-
-#Looks good enough to me, may need to scale the damage values 
-
+  labs(x = 'Warming (Degrees Celsius)', y = 'Damages ($ billions)')
+#Looks good enough to me, note the Y axis now shows damages in billions of dollars
 ```
 
 ### **2. Damage Calculations**
 
 This section uses the function generated from the damages data to predict damages in each year under the baseline climate and the pulse scenario.
 
-####**Figure 2: Damages Over Time With and Without the "Pulse" Scenario**
+#### **Figure 2: Damages Over Time With and Without the "Pulse" Scenario**
 
 ```{r}
 # Generate the estimates and facet wrap a plot showing the impacts of the two scenarios side by side 
+#divide difference by 35 billion to get the effect per ton
+pulse_ton <- 35000000000
+damages_predict <- warming %>%
+  mutate(damages_baseline = damage_function(warming_baseline)) %>%
+  mutate(damages_pulse = damage_function(warming_pulse)) %>%
+  mutate(damages_difference = damages_pulse - damages_baseline) %>%
+  mutate(damages_difference_ton = damages_difference/pulse_ton)
+# Create the first graph showing the lines for both scenarios and total damages 
+ggplot(data = damages_predict, aes(x = year)) +
+  geom_smooth(aes(y = damages_baseline), color = "goldenrod") +
+  geom_smooth(aes(y = damages_pulse), color = "sienna") +
+  labs(x = 'Year', y = 'Damages ($ billions)')
 ```
 
-####**Figure 3: Difference in Damages Over Time With and Without the "Pulse" Scenario**
+*Note: the difference in damages between the two scenarios is relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
+
+#### **Figure 3: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
 
 ```{r}
 # Generate the differences and facet wrap two plots showing absolute difference between the two scenarios and the difference per ton of CO2 
+absolute_plot <- ggplot(data = damages_predict,
+                        aes(x = year, y = damages_difference)) +
+  geom_smooth(color = "goldenrod") +
+  labs(x = 'Year', y = 'Difference in Damages ($ billions)')
+absolute_plot
+ton_plot <- ggplot(data = damages_predict,
+                        aes(x = year, y = damages_difference_ton)) +
+  geom_smooth(color = "sienna") +
+  labs(x = 'Year', y = 'Difference in Damages ($ billions per ton)')
+ton_plot
+# may need to double check units/conversion here but the graphs look okay 
 ```
 
 ### **3. SCC Analysis**
 
 This section uses different discount rates to estimate a range of potential SCC values.
 
-####**Figure 4: Discount Rate Impacts on SCC**
+#### **Figure 4: Discount Rate Impacts on SCC**
 
 ```{r}
 # Plot a range of discount rates (likely 2-10 percent) to estimate SCC values 
@@ -134,6 +151,14 @@ r=p+ng
 ```{r}
 # Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC, find it on the graph above 
 
+# define the values 
+p <- 0.001
+n <- 2
+g <- 0.01
+
+# plug into the Ramsey rule
+
+
 ```
 
 ### **5. Policy Considerations**
@@ -146,7 +171,7 @@ This section will consider business as usual (Policy A) against strong action ag
 
 *Assume: Society is risk neutral and the discount rate is 2%. Policy A costs $0 and Policy B costs $X to implement. Total cost is implementation cost + damages.*
 
-####**Figure 5: Total Cost by Policy Pathway**
+#### **Figure 5: Total Cost by Policy Pathway**
 
 ```{r}
 # Plot the total cost of the two policies
