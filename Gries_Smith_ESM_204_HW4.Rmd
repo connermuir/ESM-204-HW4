@@ -111,7 +111,7 @@ ggplot(data = damages_predict, aes(x = year)) +
 
 *Note: the difference in damages between the two scenarios is relatively small and the "pulse scenario" (red line) is only marginally higher than the "baseline" scenario (yellow line)*
 
-#### **Figure 3: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
+#### **Figure 3 and 4: Difference in Absolute and Per Ton Damages Over Time Between Scenarios**
 
 ```{r}
 # Generate the differences and facet wrap two plots showing absolute difference between the two scenarios and the difference per ton of CO2 
@@ -132,10 +132,37 @@ ton_plot
 
 This section uses different discount rates to estimate a range of potential SCC values.
 
-#### **Figure 4: Discount Rate Impacts on SCC**
+#### **Figure 5: Discount Rate Impacts on SCC**
 
 ```{r}
 # Plot a range of discount rates (likely 2-10 percent) to estimate SCC values 
+
+# Calculate net damages up to 2100 from one tonne of CO2 by summing damages_difference_ton
+
+net_damages_per_ton <- sum(damages_predict$damages_difference_ton)
+
+# Create a function of net present value using the discount rate, damage, time, and present time
+
+discount_damages <- function(rate, damage, time, present_time){
+  NPV <- damage/ (1 + (rate/100))^(time-present_time)
+  return(NPV)
+}
+
+# Create data frame for discounting
+
+discount <- data_frame(rates = seq(0,10, 0.1), SCC = seq(0,10, 0.1))
+
+# Use for loop to calculate the discounted damages up to 2100 for discount rates from 0 to 10 and apply function to sum all elements in column to find the net discounted cost
+
+for(x in 1:length(discount$rates)){
+  discount$SCC[x] <- sum(discount_damages(discount$rates[x], damages_predict$damages_difference_ton, damages_predict$year, 2022))
+}
+
+# Plot discount
+
+ggplot(data = discount)+
+  geom_point(aes(x = rates, y = SCC))
+
 ```
 
 How does the discount rate affect the SCC? *(Hint, lower discount, higher SCC)*
@@ -148,6 +175,9 @@ This section uses the following function to estimate the SCC:
 r=p+ng
 \end{equation}
 
+#### **Figure 6: The NPV of future damages between 2021 and 2100 at year 2021 discounted with respect to various discount rates. The coral point shows the discount rate and SCC associated with recommendations made by The National Academies of Sciences, Engineering, and Medicine**
+
+
 ```{r}
 # Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC, find it on the graph above 
 
@@ -158,6 +188,15 @@ g <- 0.01
 
 # plug into the Ramsey rule
 
+ramsey <- (p+n*g)*100
+
+# plug into previous equation
+
+discount_ramsey <- sum(discount_damages(ramsey,damages_predict$damages_difference_ton, damages_predict$year, 2022))
+
+ggplot(data = discount)+
+  geom_point(aes(x = rates, y = SCC))+
+  geom_point(x = ramsey, y = discount_ramsey, color = "coral", size = 4)
 
 ```
 
